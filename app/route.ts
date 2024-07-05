@@ -30,11 +30,11 @@ export async function GET(req: NextRequest) {
   for (const line of releaseRes.body.split("\n")) {
     const match = line.match(new RegExp(`(?: - )?\\*\\*${sc}\\.wasm\\*\\*: \`([0-9a-z]+)\``));
     if (match) {
+      if (releaseCodeHash !== undefined) {
+        return new Response("Two code hashes matching", { status: 400 });
+      }
       releaseCodeHash = match[1];
     };
-  }
-  if (releaseCodeHash === undefined) {
-    return new Response("No code hash found in the release", { status: 400 });
   }
 
   return Response.json(mainnetCodeHash === releaseCodeHash);
