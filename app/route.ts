@@ -1,10 +1,24 @@
+import { NextRequest } from "next/server";
+
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const address = "erd1qqqqqqqqqqqqqpgqq66xk9gfr4esuhem3jru86wg5hvp33a62jps2fy57p";
-  const repository = "https://github.com/multiversx/mx-exchange-sc";
-  const tag = "v3.0.5";
-  const scPath = "dex/router";
+export async function GET(req: NextRequest) {
+  const address = req.nextUrl.searchParams.get("address");
+  if (address === null) {
+    return new Response("Null address", { status: 400 });
+  }
+  const repository = req.nextUrl.searchParams.get("repository");
+  if (repository === null) {
+    return new Response("Null repository", { status: 400 });
+  }
+  const tag = req.nextUrl.searchParams.get("tag");
+  if (tag === null) {
+    return new Response("Null tag", { status: 400 });
+  }
+  const scPath = req.nextUrl.searchParams.get("scPath");
+  if (scPath === null) {
+    return new Response("Null scPath", { status: 400 });
+  }
 
   const mainnetRes = await fetch(`https://gateway.multiversx.com/address/${address}/code-hash`, { cache: "no-store" }).then(r => r.json());
   const mainnetCodeHash = Buffer.from(mainnetRes.data.codeHash, "base64").toString("hex");

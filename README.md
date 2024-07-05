@@ -1,0 +1,1 @@
+https://xexchange-release-mainnet-match.vercel.app/?address=erd1qqqqqqqqqqqqqpgqq66xk9gfr4esuhem3jru86wg5hvp33a62jps2fy57p&repository=https://github.com/multiversx/mx-exchange-sc&tag=v3.0.5&scPath=dex/router
