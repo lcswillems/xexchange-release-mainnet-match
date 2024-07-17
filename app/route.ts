@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import crypto from "node:crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +21,8 @@ export async function GET(req: NextRequest) {
     return new Response("Null scPath", { status: 400 });
   }
 
-  const mainnetRes = await fetch(`https://gateway.multiversx.com/address/${address}/code-hash`, { cache: "no-store" }).then(r => r.json());
-  const mainnetCodeHash = Buffer.from(mainnetRes.data.codeHash, "base64").toString("hex");
+  let mainnetRes = await fetch(`https://gateway.multiversx.com/address/${address}/code-hash`, { cache: "no-store" }).then(r => r.json());
+  let mainnetCodeHash = Buffer.from(mainnetRes.data.codeHash, "base64").toString("hex");
 
   const repo = repository.replace(/^(https?:\/\/)?(www\.)?github\.com\//, '');
   const sc = scPath.split("/").at(-1);
@@ -36,6 +37,15 @@ export async function GET(req: NextRequest) {
       releaseCodeHash = match[1];
     };
   }
+
+  if (mainnetCodeHash === releaseCodeHash) {
+    return Response.json(true);
+  }
+
+  mainnetRes = await fetch(`https://gateway.multiversx.com/address/${address}`, { cache: "no-store" }).then(r => r.json());
+  const mainnetCode = mainnetRes.data.account.code;
+  console.log(mainnetCode)
+  mainnetCodeHash = crypto.createHash('sha256').update(Buffer.from(mainnetCode, 'hex')).digest("hex");
 
   return Response.json(mainnetCodeHash === releaseCodeHash);
 }
