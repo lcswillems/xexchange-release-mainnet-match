@@ -8,13 +8,9 @@ export async function GET(req: NextRequest) {
   if (address === null) {
     return new Response("Null address", { status: 400 });
   }
-  const repository = req.nextUrl.searchParams.get("repository");
-  if (repository === null) {
-    return new Response("Null repository", { status: 400 });
-  }
-  const tag = req.nextUrl.searchParams.get("tag");
-  if (tag === null) {
-    return new Response("Null tag", { status: 400 });
+  const tagUrl = req.nextUrl.searchParams.get("tagUrl");
+  if (tagUrl === null) {
+    return new Response("Null tag URL", { status: 400 });
   }
   const scPath = req.nextUrl.searchParams.get("scPath");
   if (scPath === null) {
@@ -24,7 +20,13 @@ export async function GET(req: NextRequest) {
   let mainnetRes = await fetch(`https://gateway.multiversx.com/address/${address}/code-hash`, { cache: "no-store" }).then(r => r.json());
   let mainnetCodeHash = Buffer.from(mainnetRes.data.codeHash, "base64").toString("hex");
 
-  const repo = repository.replace(/^(https?:\/\/)?(www\.)?github\.com\//, '');
+  const match = tagUrl.match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/([^\/]+\/[^\/]+)\/releases\/tag\/(.+)$/);
+  if (match === null) {
+    return new Response("No match", { status: 400 });
+  }
+
+  const repo = match[1];
+  const tag = match[2];
   const sc = scPath.split("/").at(-1);
   const releaseRes = await fetch(`https://api.github.com/repos/${repo}/releases/tags/${tag}`, { cache: "force-cache" }).then(r => r.json());
   let releaseCodeHash: string | undefined;
@@ -43,9 +45,7 @@ export async function GET(req: NextRequest) {
   }
 
   mainnetRes = await fetch(`https://gateway.multiversx.com/address/${address}`, { cache: "no-store" }).then(r => r.json());
-  const mainnetCode = mainnetRes.data.account.code;
-  console.log(mainnetCode)
-  mainnetCodeHash = crypto.createHash('sha256').update(Buffer.from(mainnetCode, 'hex')).digest("hex");
+  mainnetCodeHash = crypto.createHash('sha256').update(Buffer.from(mainnetRes.data.account.code, 'hex')).digest("hex");
 
   return Response.json(mainnetCodeHash === releaseCodeHash);
 }
